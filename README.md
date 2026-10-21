@@ -1,26 +1,60 @@
 # React in Meetings
 
+[![Latest Release](https://img.shields.io/github/v/release/delightc123/React-in-Meetings?label=Download%20Installer&style=for-the-badge&color=6366f1)](https://github.com/delightc123/React-in-Meetings/releases/latest)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-blue?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/blob/main/LICENSE)
+
 Pull a face at your webcam. It works out *which* face, and drops the matching meme over your head, scaled to follow you around the frame. You can extend and add more memes to your heart's desire.
 
-Point Zoom at its virtual camera and the whole call sees it.
+Point Zoom, Google Meet, Microsoft Teams, or Discord at its virtual camera and the whole call sees it.
+
+> 🚀 **[Click Here to Download ReactInMeetings_Setup.exe](https://github.com/delightc123/React-in-Meetings/releases/latest)**  
+> *(No Python or command-line required. Standard Windows setup wizard with auto-updates)*
+
+---
+
+## Quick Start — Desktop Application
+
+Run the native PySide6 / Qt6 desktop app with a modern dark theme, live letterboxed preview, visual meme gallery, interactive 7-second calibration wizard, and Windows system tray streaming:
 
 ```bash
-python react_in_meetings.py              # preview + virtual camera
-python react_in_meetings.py --no-vcam    # preview only
+# Windows One-Click:
+run_desktop.bat
+
+# Or via Python:
+python app.py
+```
+
+### Desktop App Features
+- **Live Preview Canvas**: Smooth 30+ FPS preview with letterboxing, camera selector dropdown, and diagnostic HUD toggles.
+- **Visual Meme Gallery**: Interactive cards for all 14 reactions with instant 2-second test buttons.
+- **Drag-and-Drop Meme Customization**: Drag any `.png`, `.jpg`, or `.gif` straight from Windows Explorer onto a card to replace it live. Original files are safely backed up to `assets/backups/`.
+- **7-Second Calibration Wizard**: Interactive countdown modal with posture alignment guide and instant baseline feedback.
+- **Background Meeting Streaming**: Closing `[X]` minimizes the app directly to your system tray so your meeting virtual camera stays active. Explicitly exit anytime via the tray menu.
+
+---
+
+## CLI Mode
+
+For headless setups, terminal lovers, or quick testing without the full GUI:
+
+```bash
+python react_in_meetings_v2.py              # Calibrated engine (preview + virtual camera)
+python react_in_meetings_v2.py --no-vcam    # Local preview only
+python react_in_meetings_v2.py --calibrate  # 7-second terminal calibration
+python react_in_meetings.py                 # Fixed-threshold fallback engine
 ```
 
 Fourteen reactions out of the box: **time out**, **heart hands**, **hands over face**, **crashing out**, **dancing**, **nose pinch**, **flirty**, **hand up**, **tongue out**, **gasp**, **disgust**, **talking to the wall**, **side-eye**, and **spinning**.
 
-There is a second file, `react_in_meetings_v2.py`, which is the same engine with expression thresholds calibrated to **your** face instead of a guessed constant.
-
 ---
 
-## Setup
+## Setup & Installation
 
 ```bash
-# Create and activate virtual environment
-python3.12 -m venv venv
-source venv/bin/activate           # Windows: venv\Scripts\activate
+# Create and activate virtual environment (Python 3.11 or 3.12)
+python -m venv venv
+venv\Scripts\activate              # Linux/macOS: source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -31,27 +65,6 @@ pip install -r requirements.txt
 
 > [!WARNING]
 > **Don't unpin the dependencies.** MediaPipe `0.10.30+` (including `1.0.x`) ships macOS wheels that abort the moment they open a detector, so it is pinned at `0.10.21`. That build requires NumPy 1.x, and OpenCV 5 requires NumPy 2 — while MediaPipe `0.10.21` asks for an *unpinned* `opencv-contrib-python`, which quietly drags OpenCV 5 and NumPy 2 back in. That is why the OpenCV pins exist. Unpin one and you have to unpin all three.
-
----
-
-## Running It
-
-```bash
-# Calibrate your resting face once (takes 7 seconds)
-python react_in_meetings_v2.py --calibrate
-
-# Launch the live engine
-python react_in_meetings_v2.py
-```
-
-### Keyboard Controls
-
-| Key | Action |
-| :--- | :--- |
-| `q` | Quit application |
-| `d` | Toggle the diagnostic HUD (shows real-time blendshapes & sigmas) |
-| `c` | Recalibrate resting baseline interactively |
-| `1`–`9`, `0`, `-`, `=`, `[`, `]` | Force-trigger a specific reaction on screen for 2 seconds |
 
 ---
 
@@ -69,7 +82,7 @@ The virtual camera is enabled by default. Zoom, Google Meet, Microsoft Teams, Di
 
 ### 2. Launch the App
 
-The console prints the target device it publishes to:
+The header bar (or console) indicates the target device it publishes to:
 
 ```text
 Virtual camera: 'OBS Virtual Camera'  <- select this camera in Zoom / Meet
@@ -83,12 +96,9 @@ Virtual camera: 'OBS Virtual Camera'  <- select this camera in Zoom / Meet
 > [!IMPORTANT]
 > **Start React in Meetings before launching your meeting app.** Most meeting clients scan for connected cameras once on launch and won't detect virtual devices registered afterwards.
 
-> [!TIP]
-> Test this on a call with a friendly colleague first! The engine triggers autonomously based on your actual facial expressions, so everyone sees whatever gesture it detects.
-
 ---
 
-## The Reactions
+## The 14 Out-of-the-Box Reactions
 
 | Pose | Trigger Gesture |
 | :--- | :--- |
@@ -107,25 +117,22 @@ Virtual camera: 'OBS Virtual Camera'  <- select this camera in Zoom / Meet
 | `suspicious` | Turn your head sideways and squint |
 | `spin` | Leave the webcam frame entirely |
 
-Reaction media lives in `assets/`, named after the corresponding pose (e.g. `heart.jpeg`, `spin.gif`). Swap in your own by dropping a file with the matching name. JPEG, PNG, and animated GIFs all work seamlessly: alpha transparency composites cleanly, and GIF frame timings are read directly from the file. If an asset is missing, you get a clean red placeholder box rather than a runtime crash.
+Reaction media lives in `assets/`, named after the corresponding pose (e.g. `heart.jpeg`, `spin.gif`). Swap in your own simply by dragging files into the desktop app or dropping a file into `assets/`. JPEG, PNG, and animated GIFs all work seamlessly.
 
 ---
 
 ## Customizing & Extending
 
-### Swapping a Meme (~30 seconds)
+### Swapping a Meme in the Desktop App
+1. Open the Desktop App (`run_desktop.bat` or `python app.py`).
+2. Drag and drop any image or animated GIF directly from Windows Explorer onto the desired reaction card in the gallery.
+3. The app automatically creates a timestamped backup of the original asset in `assets/backups/`, installs the new file, and live-reloads it immediately.
 
-Drop a file into `assets/` named after the pose — `heart.png` replaces the default heart reaction.
-- JPEG, PNG, and animated GIFs are supported.
-- Transparency channels composite automatically.
-- Prefixes like `2026_heart.png` are accepted.
-- Press that pose's test key (`1`–`=`) to verify how it sits over your head.
-
-### Adding a New Pose
+### Adding a New Pose (Developer Guide)
 
 1. **Place Asset**: Save your image/GIF in `assets/` (e.g., `assets/thinking.png`).
-2. **Register Pose**: Append the identifier to `POSES` in `react_in_meetings_v2.py`. The list evaluates top-to-bottom, so place specific poses above generic ones.
-3. **Add Detection Logic**: Insert a branch in `decide()`:
+2. **Register Pose**: Append the identifier to `POSES` in `engine/decision.py`. The list evaluates top-to-bottom, so place specific poses above generic ones.
+3. **Add Detection Logic**: Insert a branch in `decide()` inside [`engine/decision.py`](file:///C:/Software/PROJ/React-in-Meetings/engine/decision.py):
    ```python
    for h in hands:
        if near(h.palm, face.chin, 0.5) and not h.open:
@@ -137,14 +144,11 @@ Drop a file into `assets/` named after the pose — `heart.png` replaces the def
    - `body`: `.elbows_up`.
    - `m`: Normalized facial expressions measured in standard deviations (sigma).
    - `near(a, b, k)`: Evaluates whether distance is within `k` face-widths (maintains distance invariance).
-4. **Tune Stability**: Assign an `ARM` count if the gesture is twitchy, then calibrate against the HUD (`d` key).
-
-> [!CAUTION]
-> `TEST_KEYS` assigns one test key per pose by index position. Adding a 15th pose works fine without a key; removing a pose without trimming `TEST_KEYS` will raise an IndexError when pressed.
+4. **Tune Stability**: Assign an `ARM` count if the gesture is twitchy, then calibrate against the HUD.
 
 ---
 
-## How It Works
+## Architecture & How It Works
 
 ```text
 webcam frame
@@ -161,37 +165,20 @@ webcam frame
      │
  5. Hysteresis (ARM)   persists N frames to activate, lingers 10 frames after
      │
- Composite Output      scaled to face bounding box, alpha-blended, streamed to vcam
+ Composite Output      scaled to face bounding box, alpha-blended, streamed to vcam & Qt UI
 ```
 
-### Normalizing Away Camera Distance
-
-Landmark coordinates natively emerge in pixel units, which fluctuate depending on sitting distance from the camera. To achieve scale invariance, all geometric measurements are divided by the face bounding box width:
-
-$$\text{Distance Ratio} = \frac{\|\mathbf{p}_1 - \mathbf{p}_2\|}{\text{Face Width}}$$
-
-`near(hand.index, face.mouth, 0.22)` evaluates to "within 22% of a face width," ensuring identical sensitivity whether you sit 30 cm or 2 meters from the lens. Hand velocity and head yaw are normalized using the same geometric principle.
-
-### Why Fixed Thresholds Fail (and Why Sigma Calibration Wins)
+### Why Sigma Calibration Wins Over Fixed Thresholds
 
 MediaPipe blendshape values are **never zero when your face is at rest**, and resting baselines differ across individuals:
 - Some faces idle at `jawOpen = 0.02`; others sit naturally at `0.19`.
 - A resting smile can read `mouthSmile = 0.30` while thinking about nothing.
 
-Consequently, hardcoded thresholds like `jawOpen > 0.5` are physically unreachable for some faces and overly sensitive for others.
-
-`react_in_meetings_v2.py` resolves this through a 7-second resting face calibration. It computes the **mean ($\mu$) and standard deviation ($\sigma$)** across all 52 blendshape channels:
+The engine computes the **mean ($\mu$) and standard deviation ($\sigma$)** across all 52 blendshape channels:
 
 $$z = \frac{\text{reading} - \mu_{\text{neutral}}}{\sigma_{\text{neutral}}}$$
 
-"6 sigma above your resting jaw" produces an identical, reliable trigger across any face:
-
-```text
-                       Still Face        Mobile Face
-Resting Neutral        z = +0.1          z = +0.1         (Quiet)
-Gasp Expression        z = +38.7         z = +8.7         (Both trigger reliably)
-Nose Scrunch           z = +19.3         z = +5.5         (Both trigger reliably)
-```
+"6 sigma above your resting jaw" produces an identical, reliable trigger across any face.
 
 ---
 
@@ -199,15 +186,43 @@ Nose Scrunch           z = +19.3         z = +5.5         (Both trigger reliably
 
 ```text
 React-in-Meetings/
-├── react_in_meetings_v2.py   # Primary calibrated production runtime (recommended)
-├── react_in_meetings.py      # Fixed-threshold fallback runtime
-├── calibration.json          # Personalized neutral baseline (generated via --calibrate)
-├── requirements.txt          # Strictly pinned dependencies (do not alter)
-├── assets/                   # Reaction media library (images & animated GIFs)
-├── models/                   # MediaPipe .task bundles (auto-downloaded)
-├── .rules/                   # Subsystem architecture rules
-└── .memory/                  # Progressive disclosure decision & session logs
+├── app.py                      # Desktop application entrypoint (PySide6)
+├── run_desktop.bat             # One-click Windows batch launcher
+├── react_in_meetings_v2.py     # Calibrated CLI script entrypoint
+├── react_in_meetings.py        # Fixed-threshold fallback CLI script
+├── calibration.json            # Personalized neutral baseline
+├── requirements.txt            # Pinned dependencies (MediaPipe, OpenCV, PySide6)
+├── assets/                     # Reaction media library (images & animated GIFs)
+│   └── backups/                # Automatic backups from drag-and-drop replacements
+├── models/                     # MediaPipe .task bundles (auto-downloaded)
+├── engine/                     # Decoupled core vision & detection pipeline
+│   ├── detector.py             # MediaPipe task models & scale-invariant geometry
+│   ├── decision.py             # Gesture priority rules & sigma thresholds
+│   ├── compositor.py           # GIF timing, alpha blending & procedural fallbacks
+│   ├── calibration.py          # Baseline metrics collection & posture warnings
+│   └── worker.py               # High-performance QThread capture & inference loop
+├── ui/                         # Modern PySide6 presentation components
+│   ├── styles.py               # Notion/Linear dark theme design tokens & QSS
+│   ├── video_widget.py         # QPainter video canvas with letterboxing & HUD
+│   ├── asset_grid.py           # 14-card gallery with test keys & drag-and-drop
+│   ├── calibration_dialog.py   # 7-second calibration wizard modal dialog
+│   ├── tray.py                 # System tray controller & context menu
+│   └── main_window.py          # Master window layout & header/footer controls
+├── tests/                      # Automated unit & integration test suites
+│   ├── test_worker.py          # Worker thread latency & signals
+│   ├── test_ui_components.py   # UI widgets & rendering
+│   ├── test_app_integration.py # App lifecycle & graceful shutdown
+│   └── test_hardening.py       # Malformed asset rejection & camera resilience
+├── .rules/                     # Subsystem architecture rules
+└── .memory/                    # Progressive disclosure decision & session logs
 ```
+
+---
+
+## Acknowledgments & Attribution
+
+- Built upon the computer-vision facial reaction prototype [`itsgiving`](https://github.com/gazijarin) by **Gazi Jarin**.
+- Modularized, hardened, and transformed into a native desktop application with PySide6 / Qt6, automated installer packaging, drag-and-drop customization, and background meeting stream retention by **Delight Chukwu**.
 
 ---
 

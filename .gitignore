@@ -2,6 +2,10 @@
 AGENTS.md
 memory.md
 .memory/
+.rules/
+.myFiles/
+.myfiles/
+.kilo/
 
 # Local reference context
 .context/itsgiving/
@@ -22,3 +26,9 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# PyInstaller & Installer Build Artifacts
+build/
+dist/
+dist-installer/
+*.spec.bak
