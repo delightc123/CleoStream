@@ -1,4 +1,4 @@
-name: Build and Release Windows Desktop App
+name: Build and Release Desktop App
 
 on:
   push:
@@ -50,7 +50,7 @@ jobs:
         run: |
           iscc installer.iss
 
-      - name: Publish GitHub Release
+      - name: Publish Windows Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
@@ -60,5 +60,66 @@ jobs:
           generate_release_notes: true
           files: |
             dist-installer/ReactInMeetings_Setup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    name: Build & Package macOS DMG
+    runs-on: macos-14
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv pip install -r requirements.txt pyinstaller --system
+
+      - name: Run automated test suite
+        run: |
+          python tests/test_updater.py
+          python tests/test_ui_components.py
+          python tests/test_hardening.py
+
+      - name: Compile standalone macOS App Bundle with PyInstaller
+        run: |
+          pyinstaller ReactInMeetings.spec --noconfirm
+
+      - name: Install create-dmg
+        run: |
+          brew install create-dmg
+
+      - name: Package macOS Disk Image (DMG)
+        run: |
+          mkdir -p dist-installer
+          create-dmg \
+            --volname "React in Meetings" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "ReactInMeetings.app" 175 190 \
+            --hide-extension "ReactInMeetings.app" \
+            --app-drop-link 425 190 \
+            "dist-installer/ReactInMeetings_macOS.dmg" \
+            "dist/ReactInMeetings.app" || test -f dist-installer/ReactInMeetings_macOS.dmg
+
+      - name: Publish macOS Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: "React in Meetings ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            dist-installer/ReactInMeetings_macOS.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

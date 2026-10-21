@@ -56,7 +56,8 @@ def check_for_updates_sync(repo: str = GITHUB_REPO, current: str = __version__) 
         release_notes = payload.get("body", "")
         html_url = payload.get("html_url", "")
 
-        # Find .exe setup installer in release assets
+        # Find OS-specific installer asset in release assets
+        target_ext = ".dmg" if sys.platform == "darwin" else ".exe"
         assets = payload.get("assets", [])
         installer_url = ""
         installer_name = ""
@@ -64,12 +65,12 @@ def check_for_updates_sync(repo: str = GITHUB_REPO, current: str = __version__) 
 
         for asset in assets:
             name = asset.get("name", "").lower()
-            if name.endswith(".exe"):
+            if name.endswith(target_ext):
                 installer_url = asset.get("browser_download_url", "")
                 installer_name = asset.get("name", "")
                 installer_size = asset.get("size", 0)
-                if "setup" in name:
-                    # Prefer dedicated setup installer
+                if ("setup" in name) or ("dmg" in name):
+                    # Prefer dedicated setup installer or DMG
                     break
 
         newer = is_newer_version(tag_name, current)
@@ -163,16 +164,20 @@ class UpdateDownloadWorker(QThread):
 
 def launch_installer_and_exit(installer_path: str):
     """
-    Executes the downloaded Windows setup installer and shuts down the current process.
-    Uses shell=False to safely handle paths containing spaces without cmd.exe mangling.
+    Executes or mounts the downloaded setup installer/DMG and shuts down the current process.
+    On Windows: executes setup .exe directly with detached process flags.
+    On macOS: runs 'open <path>' to mount the disk image (.dmg) in Finder.
     """
     if not os.path.isfile(installer_path):
         raise FileNotFoundError(f"Installer not found at {installer_path}")
 
-    # Launch installer detached so it continues after this app exits
-    creation_flags = 0
-    if sys.platform == "win32":
-        creation_flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+    if sys.platform == "darwin":
+        # Mount DMG in Finder on macOS
+        subprocess.Popen(["open", installer_path])
+    else:
+        creation_flags = 0
+        if sys.platform == "win32":
+            creation_flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+        subprocess.Popen([installer_path], shell=False, creationflags=creation_flags)
 
-    subprocess.Popen([installer_path], shell=False, creationflags=creation_flags)
     sys.exit(0)

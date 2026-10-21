@@ -16,10 +16,17 @@ def get_root_dir() -> str:
 def get_app_data_dir() -> str:
     """Returns writable directory for user settings and backups."""
     if getattr(sys, "frozen", False):
-        # When installed in Program Files, write user settings to %APPDATA%\ReactInMeetings
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            path = os.path.join(appdata, "ReactInMeetings")
+        if sys.platform == "win32":
+            # When installed in Program Files, write user settings to %APPDATA%\ReactInMeetings
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                path = os.path.join(appdata, "ReactInMeetings")
+                os.makedirs(path, exist_ok=True)
+                return path
+        elif sys.platform == "darwin":
+            # On macOS, write user settings to ~/Library/Application Support/ReactInMeetings
+            home = os.path.expanduser("~")
+            path = os.path.join(home, "Library", "Application Support", "ReactInMeetings")
             os.makedirs(path, exist_ok=True)
             return path
         return os.path.dirname(sys.executable)

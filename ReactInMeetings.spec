@@ -93,3 +93,22 @@ coll = COLLECT(
     upx_exclude=[],
     name='ReactInMeetings',
 )
+
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        coll,
+        name='ReactInMeetings.app',
+        icon=None,
+        bundle_identifier='com.delightc123.reactinmeetings',
+        info_plist={
+            'CFBundleName': 'React in Meetings',
+            'CFBundleDisplayName': 'React in Meetings',
+            'CFBundleIdentifier': 'com.delightc123.reactinmeetings',
+            'CFBundleVersion': '1.1.0',
+            'CFBundleShortVersionString': '1.1.0',
+            'NSCameraUsageDescription': 'React in Meetings requires camera access to detect facial expressions and gesture reactions in real time.',
+            'NSHighResolutionCapable': 'True',
+            'LSUIElement': '0',
+            'NSPrincipalClass': 'NSApplication',
+        },
+    )

@@ -2,7 +2,7 @@
 ; Produces standalone Windows installer ReactInMeetings_Setup.exe
 
 #define MyAppName "React in Meetings"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Delight Chukwu"
 #define MyAppURL "https://github.com/delightc123/React-in-Meetings"
 #define MyAppExeName "ReactInMeetings.exe"

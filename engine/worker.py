@@ -283,7 +283,12 @@ class VisionWorker(QThread):
         try:
             if self.cap is not None:
                 self.cap.release()
-            backend = cv2.CAP_DSHOW if sys.platform == "win32" else cv2.CAP_ANY
+            if sys.platform == "win32":
+                backend = cv2.CAP_DSHOW
+            elif sys.platform == "darwin":
+                backend = cv2.CAP_AVFOUNDATION
+            else:
+                backend = cv2.CAP_ANY
             self.cap = cv2.VideoCapture(self.camera_index, backend)
             W, H = self.resolution
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)

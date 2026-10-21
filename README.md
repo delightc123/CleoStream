@@ -1,15 +1,17 @@
 # React in Meetings
 
 [![Latest Release](https://img.shields.io/github/v/release/delightc123/React-in-Meetings?label=Download%20Installer&style=for-the-badge&color=6366f1)](https://github.com/delightc123/React-in-Meetings/releases/latest)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-blue?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/releases/latest)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/blob/main/LICENSE)
 
 Pull a face at your webcam. It works out *which* face, and drops the matching meme over your head, scaled to follow you around the frame. You can extend and add more memes to your heart's desire.
 
 Point Zoom, Google Meet, Microsoft Teams, or Discord at its virtual camera and the whole call sees it.
 
-> 🚀 **[Click Here to Download ReactInMeetings_Setup.exe](https://github.com/delightc123/React-in-Meetings/releases/latest)**  
-> *(No Python or command-line required. Standard Windows setup wizard with auto-updates)*
+> 📥 **Downloads**:
+> - 🪟 **[Download for Windows (ReactInMeetings_Setup.exe)](https://github.com/delightc123/React-in-Meetings/releases/latest)** *(Windows 10/11 Setup Wizard)*
+> - 🍏 **[Download for macOS (ReactInMeetings_macOS.dmg)](https://github.com/delightc123/React-in-Meetings/releases/latest)** *(Apple Silicon M1/M2/M3/M4)*  
+> *(No Python or command-line required. Built-in auto-updates on both platforms)*
 
 ---
 
@@ -28,9 +30,21 @@ python app.py
 ### Desktop App Features
 - **Live Preview Canvas**: Smooth 30+ FPS preview with letterboxing, camera selector dropdown, and diagnostic HUD toggles.
 - **Visual Meme Gallery**: Interactive cards for all 14 reactions with instant 2-second test buttons.
-- **Drag-and-Drop Meme Customization**: Drag any `.png`, `.jpg`, or `.gif` straight from Windows Explorer onto a card to replace it live. Original files are safely backed up to `assets/backups/`.
+- **Drag-and-Drop Meme Customization**: Drag any `.png`, `.jpg`, or `.gif` straight from your file manager onto a card to replace it live. Original files are safely backed up to your user profile directory.
 - **7-Second Calibration Wizard**: Interactive countdown modal with posture alignment guide and instant baseline feedback.
 - **Background Meeting Streaming**: Closing `[X]` minimizes the app directly to your system tray so your meeting virtual camera stays active. Explicitly exit anytime via the tray menu.
+
+### macOS (MacBook) Installation & Gatekeeper Note
+
+Because React in Meetings is an independent open-source project without an annual Apple Developer certificate:
+1. Open the downloaded `ReactInMeetings_macOS.dmg` and drag **React in Meetings** into `/Applications`.
+2. When launching for the first time, if macOS displays *"cannot be opened because Apple cannot check it for malicious software"*:
+   - **Right-click** (or Control-click) `ReactInMeetings.app` in `/Applications` → click **Open** → click **Open**, OR
+   - Run this one-line command in Terminal:
+     ```bash
+     xattr -cr /Applications/ReactInMeetings.app
+     ```
+3. **Virtual Camera on Mac**: To stream composited meme reactions to Zoom, Google Meet, or Microsoft Teams, ensure [OBS Studio](https://obsproject.com/) (free) is installed to provide the macOS CoreMediaIO virtual camera plugin. (Preview mode works without OBS).
 
 ---
 
