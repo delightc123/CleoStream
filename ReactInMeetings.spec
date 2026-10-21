@@ -10,8 +10,11 @@ ROOT_DIR = os.path.abspath(SPECPATH)
 datas = [
     (os.path.join(ROOT_DIR, 'models'), 'models'),
     (os.path.join(ROOT_DIR, 'assets'), 'assets'),
-    (os.path.join(ROOT_DIR, 'calibration.json'), '.'),
 ]
+
+calib_path = os.path.join(ROOT_DIR, 'calibration.json')
+if os.path.isfile(calib_path):
+    datas.append((calib_path, '.'))
 
 hiddenimports = [
     'engine',
