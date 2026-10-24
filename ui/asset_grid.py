@@ -1,23 +1,25 @@
 """
 Meme reaction card grid and asset manager with drag-and-drop replacement,
-corrupted file guard, and automated original backup.
+corrupted file guard, automated original backup, dynamic custom reaction creation,
+and interactive gesture re-binding.
 """
 import os
 import shutil
 import time
+from typing import Optional, Dict
 from PIL import Image
 
 from PySide6.QtCore import Qt, Signal, Slot, QSize
-from PySide6.QtGui import QPixmap, QImageReader
+from PySide6.QtGui import QPixmap, QCursor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QScrollArea, QGridLayout, QFrame, QMessageBox
 )
 
-from engine.decision import POSES
-from engine.compositor import find_asset_file
-
 from engine.paths import ROOT_DIR, APP_DATA_DIR
+from engine.compositor import find_asset_file
+from engine.custom_gestures import CustomGesture, CustomGestureRegistry
+
 FACTORY_ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 USER_ASSETS_DIR = os.path.join(APP_DATA_DIR, "assets")
 BACKUPS_DIR = os.path.join(APP_DATA_DIR, "backups")
@@ -42,12 +44,11 @@ POSE_DESCRIPTIONS = {
 
 def validate_image_file(filepath: str) -> bool:
     """Verifies that the file exists and is a valid decodable image or animated GIF."""
-    if not os.path.isfile(filepath):
+    if not filepath or not os.path.isfile(filepath):
         return False
     try:
         with Image.open(filepath) as img:
             img.verify()
-        # Verify first frame can be read
         with Image.open(filepath) as img:
             img.load()
         return True
@@ -55,73 +56,198 @@ def validate_image_file(filepath: str) -> bool:
         return False
 
 
+class AddReactionCard(QFrame):
+    """
+    Dashed-border call-to-action card triggering the Add Reaction wizard.
+    """
+    add_clicked = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("AddReactionCard")
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setMinimumSize(180, 160)
+        self.setMaximumSize(240, 190)
+        self.setStyleSheet(
+            "QFrame#AddReactionCard {"
+            "  background-color: #12121c;"
+            "  border: 2px dashed #4f46e5;"
+            "  border-radius: 10px;"
+            "}"
+            "QFrame#AddReactionCard:hover {"
+            "  background-color: #1a1a2e;"
+            "  border-color: #818cf8;"
+            "}"
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(8)
+
+        plus_icon = QLabel("＋")
+        plus_icon.setAlignment(Qt.AlignCenter)
+        plus_icon.setStyleSheet("font-size: 28px; color: #818cf8; font-weight: bold;")
+        layout.addWidget(plus_icon)
+
+        title = QLabel("Add Reaction")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("font-weight: 700; color: #f8fafc; font-size: 13px;")
+        layout.addWidget(title)
+
+        subtitle = QLabel("Custom meme & gesture")
+        subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        layout.addWidget(subtitle)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.add_clicked.emit()
+        super().mousePressEvent(event)
+
+
 class ReactionCard(QFrame):
     """
     Card widget representing one meme reaction with thumbnail,
-    test trigger button, and drag-and-drop asset replacement.
+    calibration badge, test trigger, re-bind gesture button, and drag-and-drop asset replacement.
     """
-    asset_replaced = Signal(str)  # pose name
-    test_requested = Signal(str)  # pose name
+    asset_replaced = Signal(str)    # pose/gesture id
+    test_requested = Signal(str)    # pose/gesture id
+    rebind_requested = Signal(str)  # pose/gesture id
+    delete_requested = Signal(str)  # pose/gesture id
 
-    def __init__(self, pose: str, parent=None):
+    def __init__(self, gesture_or_id, parent=None):
         super().__init__(parent)
-        self.pose = pose
+        if isinstance(gesture_or_id, CustomGesture):
+            self.gesture = gesture_or_id
+            self.pose = gesture_or_id.id
+            self.display_name = gesture_or_id.display_name
+            self.is_builtin = gesture_or_id.is_builtin
+            self.is_calibrated = gesture_or_id.has_calibration()
+        else:
+            self.pose = str(gesture_or_id)
+            self.display_name = self.pose.replace("_", " ").title()
+            self.is_builtin = True
+            self.is_calibrated = False
+            self.gesture = None
+
         self.setObjectName("ReactionCard")
         self.setProperty("class", "Card")
         self.setAcceptDrops(True)
-        self.setMinimumSize(180, 150)
-        self.setMaximumSize(240, 180)
+        self.setMinimumSize(180, 160)
+        self.setMaximumSize(240, 190)
 
+        self._build_ui()
+        self.load_thumbnail()
+
+    def _build_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(6)
 
-        # Header: Name and test trigger
+        # 1. Header: Name, Calibration Badge, Action Buttons
         top_row = QHBoxLayout()
-        self.name_label = QLabel(pose.replace("_", " ").title())
-        self.name_label.setStyleSheet("font-weight: 600; color: #f8fafc;")
-        top_row.addWidget(self.name_label)
+        top_row.setSpacing(4)
 
+        self.name_label = QLabel(self.display_name)
+        self.name_label.setStyleSheet("font-weight: 600; color: #f8fafc; font-size: 12px;")
+        top_row.addWidget(self.name_label, 1)
+
+        # Calibration badge
+        self.badge_label = QLabel()
+        if self.is_calibrated:
+            self.badge_label.setText("✨")
+            self.badge_label.setToolTip("Custom Calibrated Gesture")
+            self.badge_label.setStyleSheet("color: #34d399; font-size: 11px;")
+        top_row.addWidget(self.badge_label)
+
+        # Re-bind Gesture Button
+        self.rebind_btn = QPushButton("⚙️")
+        self.rebind_btn.setToolTip("Re-bind hand gesture trigger")
+        self.rebind_btn.setFixedSize(26, 24)
+        self.rebind_btn.setStyleSheet(
+            "QPushButton { background-color: #27273a; color: #cbd5e1; border-radius: 4px; font-size: 11px; padding: 0; }"
+            "QPushButton:hover { background-color: #3b3b55; color: white; }"
+        )
+        self.rebind_btn.clicked.connect(lambda: self.rebind_requested.emit(self.pose))
+        top_row.addWidget(self.rebind_btn)
+
+        # Test Button
         self.test_btn = QPushButton("Test")
         self.test_btn.setObjectName("TestBtn")
         self.test_btn.setToolTip("Preview overlay for 2s")
+        self.test_btn.setFixedHeight(24)
         self.test_btn.clicked.connect(lambda: self.test_requested.emit(self.pose))
         top_row.addWidget(self.test_btn)
+
+        # Delete Button (for custom reactions only)
+        if not self.is_builtin:
+            self.delete_btn = QPushButton("✕")
+            self.delete_btn.setToolTip("Delete custom reaction")
+            self.delete_btn.setFixedSize(22, 24)
+            self.delete_btn.setStyleSheet(
+                "QPushButton { background-color: transparent; color: #ef4444; border: none; font-size: 12px; font-weight: bold; }"
+                "QPushButton:hover { background-color: #ef4444; color: white; border-radius: 4px; }"
+            )
+            self.delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.pose))
+            top_row.addWidget(self.delete_btn)
+
         layout.addLayout(top_row)
 
-        # Thumbnail display / Drop Target
+        # 2. Thumbnail Display / Drop Target
         self.thumb_label = QLabel()
         self.thumb_label.setAlignment(Qt.AlignCenter)
         self.thumb_label.setStyleSheet(
             "background-color: #121217; border: 1px dashed #3a3a4c; border-radius: 6px;"
         )
-        self.thumb_label.setMinimumHeight(80)
+        self.thumb_label.setMinimumHeight(75)
         layout.addWidget(self.thumb_label, 1)
 
-        # Subtitle / Hint
-        desc = POSE_DESCRIPTIONS.get(pose, "Gesture trigger")
+        # 3. Subtitle / Gesture Description
+        if self.is_calibrated:
+            desc = "Calibrated hand gesture"
+        elif self.gesture and not self.is_builtin:
+            desc = "Custom gesture"
+        else:
+            desc = POSE_DESCRIPTIONS.get(self.pose, "Gesture trigger")
+
         self.desc_label = QLabel(desc)
         self.desc_label.setStyleSheet("font-size: 11px; color: #94a3b8;")
         self.desc_label.setWordWrap(True)
         layout.addWidget(self.desc_label)
 
-        self.load_thumbnail()
+    def update_gesture_state(self, is_calibrated: bool):
+        """Updates calibration badge and subtitle without re-creating card."""
+        self.is_calibrated = is_calibrated
+        if is_calibrated:
+            self.badge_label.setText("✨")
+            self.badge_label.setToolTip("Custom Calibrated Gesture")
+            self.desc_label.setText("Calibrated hand gesture")
+        else:
+            self.badge_label.setText("")
+            desc = POSE_DESCRIPTIONS.get(self.pose, "Standard trigger")
+            self.desc_label.setText(desc)
 
     def load_thumbnail(self):
         """Finds current media file and loads scaled thumbnail."""
-        filepath = find_asset_file(self.pose)
+        filepath = None
+        if self.gesture and self.gesture.asset_file:
+            filepath = find_asset_file(self.gesture.asset_file)
+        if not filepath:
+            filepath = find_asset_file(self.pose)
+
         if filepath and os.path.isfile(filepath):
             pixmap = QPixmap(filepath)
             if not pixmap.isNull():
                 scaled = pixmap.scaled(QSize(100, 75), Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.thumb_label.setPixmap(scaled)
                 return
+
         self.thumb_label.setText("Drop Image/GIF")
         self.thumb_label.setStyleSheet(
             "background-color: #16161d; border: 1px dashed #4b4b60; color: #64748b; font-size: 11px;"
         )
 
-    # Drag and Drop handlers
+    # Drag and Drop Handlers
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
@@ -159,7 +285,6 @@ class ReactionCard(QFrame):
             QMessageBox.warning(self, "Invalid Format", "Supported formats: PNG, JPEG, JPG, GIF.")
             return
 
-        # Integrity Check: Ensure file is not corrupted
         if not validate_image_file(source_path):
             QMessageBox.warning(
                 self,
@@ -168,10 +293,9 @@ class ReactionCard(QFrame):
             )
             return
 
-        # 1. Back up existing file to %APPDATA%/CleoStream/backups/
         os.makedirs(USER_ASSETS_DIR, exist_ok=True)
         os.makedirs(BACKUPS_DIR, exist_ok=True)
-        
+
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         user_file = find_asset_file(self.pose, USER_ASSETS_DIR)
         factory_file = find_asset_file(self.pose, FACTORY_ASSETS_DIR)
@@ -179,22 +303,19 @@ class ReactionCard(QFrame):
         if user_file and os.path.isfile(user_file):
             old_ext = os.path.splitext(user_file)[1]
             backup_name = f"{timestamp}_{self.pose}{old_ext}"
-            backup_path = os.path.join(BACKUPS_DIR, backup_name)
             try:
-                shutil.copy2(user_file, backup_path)
+                shutil.copy2(user_file, os.path.join(BACKUPS_DIR, backup_name))
                 os.remove(user_file)
             except Exception as e:
                 print(f"Error backing up custom asset: {e}")
         elif factory_file and os.path.isfile(factory_file):
             old_ext = os.path.splitext(factory_file)[1]
             backup_name = f"{timestamp}_{self.pose}_factory{old_ext}"
-            backup_path = os.path.join(BACKUPS_DIR, backup_name)
             try:
-                shutil.copy2(factory_file, backup_path)
+                shutil.copy2(factory_file, os.path.join(BACKUPS_DIR, backup_name))
             except Exception as e:
                 print(f"Error backing up factory asset: {e}")
 
-        # 2. Copy new file into writable user assets directory
         dest_path = os.path.join(USER_ASSETS_DIR, f"{self.pose}{ext}")
         try:
             shutil.copy2(source_path, dest_path)
@@ -206,25 +327,39 @@ class ReactionCard(QFrame):
 
 class AssetGridWidget(QWidget):
     """
-    Scrollable gallery containing ReactionCards for all 14 reactions.
+    Scrollable gallery containing ReactionCards for all registered reactions
+    and the + Add Reaction call-to-action.
     """
     trigger_force_reaction = Signal(str, float)
     reload_assets_requested = Signal()
+    add_reaction_requested = Signal()
+    rebind_gesture_requested = Signal(str)
+    delete_reaction_requested = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, registry: Optional[CustomGestureRegistry] = None, parent=None):
         super().__init__(parent)
+        self.registry = registry or CustomGestureRegistry()
+        self.cards: Dict[str, ReactionCard] = {}
+
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(10)
 
-        # Header Title
+        # Header Title with "+ Add Reaction" Button
         header_layout = QHBoxLayout()
         title = QLabel("Reaction Memes")
         title.setObjectName("SectionHeader")
         header_layout.addWidget(title)
 
-        subtitle = QLabel("Drag & drop any GIF/PNG onto a card to replace")
-        subtitle.setStyleSheet("color: #64748b; font-size: 11px;")
-        header_layout.addWidget(subtitle, 1, Qt.AlignRight)
+        header_layout.addStretch(1)
+
+        self.add_btn = QPushButton("＋ Add Reaction")
+        self.add_btn.setStyleSheet(
+            "QPushButton { background-color: #4338ca; color: white; font-weight: 600; font-size: 11px; padding: 5px 12px; border-radius: 6px; }"
+            "QPushButton:hover { background-color: #4f46e5; }"
+        )
+        self.add_btn.clicked.connect(self.add_reaction_requested.emit)
+        header_layout.addWidget(self.add_btn)
         main_layout.addLayout(header_layout)
 
         # Scrollable Grid
@@ -233,25 +368,51 @@ class AssetGridWidget(QWidget):
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        container = QWidget()
-        self.grid = QGridLayout(container)
+        self.container = QWidget()
+        self.grid = QGridLayout(self.container)
         self.grid.setContentsMargins(4, 4, 4, 4)
         self.grid.setSpacing(10)
 
-        self.cards = {}
+        scroll.setWidget(self.container)
+        main_layout.addWidget(scroll, 1)
+
+        self.reload_grid()
+
+    def reload_grid(self):
+        """Clears and re-populates all reaction cards from the gesture registry."""
+        # Clear existing layout items
+        while self.grid.count():
+            item = self.grid.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        self.cards.clear()
+
         cols = 2
-        for idx, pose in enumerate(POSES):
-            card = ReactionCard(pose)
+        # Card 0: Add Reaction CTA Card
+        add_card = AddReactionCard()
+        add_card.add_clicked.connect(self.add_reaction_requested.emit)
+        self.grid.addWidget(add_card, 0, 0)
+
+        # Registered Reactions (Built-in + Custom)
+        all_gestures = self.registry.get_all()
+        for idx, gesture in enumerate(all_gestures, start=1):
+            card = ReactionCard(gesture)
             card.test_requested.connect(lambda p: self.trigger_force_reaction.emit(p, 2.0))
+            card.rebind_requested.connect(self.rebind_gesture_requested.emit)
+            card.delete_requested.connect(self.delete_reaction_requested.emit)
             card.asset_replaced.connect(lambda p: self.reload_assets_requested.emit())
-            self.cards[pose] = card
+
+            self.cards[gesture.id] = card
             row = idx // cols
             col = idx % cols
             self.grid.addWidget(card, row, col)
 
-        scroll.setWidget(container)
-        main_layout.addWidget(scroll, 1)
-
     def refresh_cards(self):
-        for card in self.cards.values():
+        """Refreshes thumbnail and calibration state for all existing cards."""
+        for pose_id, card in self.cards.items():
+            g = self.registry.get(pose_id)
+            if g:
+                card.gesture = g
+                card.update_gesture_state(g.has_calibration())
             card.load_thumbnail()

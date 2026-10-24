@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
 from .video_widget import VideoWidget
 from .asset_grid import AssetGridWidget
 from .calibration_dialog import CalibrationDialog
+from .gesture_recorder_dialog import GestureRecorderDialog
+from .add_reaction_dialog import AddReactionDialog
 from .tray import TrayController, create_tray_icon
 from .update_dialog import UpdateDialog
 from engine.updater import UpdateCheckWorker
@@ -81,7 +83,8 @@ class MainWindow(QMainWindow):
         splitter.addWidget(left_container)
 
         # Right Column: Reaction Memes Grid
-        self.asset_grid = AssetGridWidget()
+        registry = getattr(self.worker, "custom_registry", None)
+        self.asset_grid = AssetGridWidget(registry=registry)
         splitter.addWidget(self.asset_grid)
 
         # Proportions: 60% preview, 40% memes
@@ -250,6 +253,9 @@ class MainWindow(QMainWindow):
         # 5. Reaction test button and asset reload from meme cards
         self.asset_grid.trigger_force_reaction.connect(self.worker.force_reaction)
         self.asset_grid.reload_assets_requested.connect(self.worker.reload_assets)
+        self.asset_grid.add_reaction_requested.connect(self._open_add_reaction_modal)
+        self.asset_grid.rebind_gesture_requested.connect(self._on_rebind_gesture)
+        self.asset_grid.delete_reaction_requested.connect(self._on_delete_reaction)
 
     def _bind_tray_signals(self):
         self.tray.show_window_requested.connect(self._restore_from_tray)
@@ -439,6 +445,73 @@ class MainWindow(QMainWindow):
         self.calib_dialog.show()
         self.calib_dialog.raise_()
         self.calib_dialog.activateWindow()
+
+    @Slot()
+    def _open_add_reaction_modal(self):
+        """Opens Add Reaction wizard to register a new reaction meme."""
+        registry = getattr(self.worker, "custom_registry", self.asset_grid.registry)
+        dialog = AddReactionDialog(registry=registry, worker=self.worker, parent=self)
+        dialog.reaction_created.connect(self._on_custom_reaction_created)
+        dialog.exec()
+
+    @Slot(object)
+    def _on_custom_reaction_created(self, gesture):
+        """Called after a new reaction is saved to registry."""
+        if hasattr(self.worker, "reload_gestures"):
+            self.worker.reload_gestures()
+        self.asset_grid.reload_grid()
+        self.status_label.setText(f"✓ Added reaction: {gesture.display_name}")
+
+    @Slot(str)
+    def _on_rebind_gesture(self, pose_id: str):
+        """Opens GestureRecorderDialog to re-record hand gesture for an existing reaction."""
+        registry = getattr(self.worker, "custom_registry", self.asset_grid.registry)
+        gesture = registry.get(pose_id)
+        name = gesture.display_name if gesture else pose_id.replace("_", " ").title()
+
+        recorder = GestureRecorderDialog(gesture_name=name, parent=self)
+        self.worker.frame_ready.connect(recorder.update_frame)
+        self.worker.hand_tracking_updated.connect(recorder.update_tracking)
+
+        def _save_rebound(sig):
+            if gesture:
+                gesture.set_signature(sig)
+                registry.add_or_update(gesture)
+            if hasattr(self.worker, "reload_gestures"):
+                self.worker.reload_gestures()
+            self.asset_grid.refresh_cards()
+            self.status_label.setText(f"✓ Re-bound gesture for {name}")
+
+        recorder.gesture_recorded.connect(_save_rebound)
+        try:
+            recorder.exec()
+        finally:
+            try:
+                self.worker.frame_ready.disconnect(recorder.update_frame)
+                self.worker.hand_tracking_updated.disconnect(recorder.update_tracking)
+            except Exception:
+                pass
+
+    @Slot(str)
+    def _on_delete_reaction(self, pose_id: str):
+        """Confirms and deletes a custom reaction."""
+        registry = getattr(self.worker, "custom_registry", self.asset_grid.registry)
+        gesture = registry.get(pose_id)
+        name = gesture.display_name if gesture else pose_id
+
+        reply = QMessageBox.question(
+            self,
+            "Delete Reaction",
+            f"Are you sure you want to delete the '{name}' reaction?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            registry.delete(pose_id)
+            if hasattr(self.worker, "reload_gestures"):
+                self.worker.reload_gestures()
+            self.asset_grid.reload_grid()
+            self.status_label.setText(f"Deleted reaction: {name}")
 
     @Slot()
     def _restore_from_tray(self):
