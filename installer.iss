@@ -1,11 +1,11 @@
-; Inno Setup Script for React in Meetings Desktop App
-; Produces standalone Windows installer ReactInMeetings_Setup.exe
+; Inno Setup Script for CleoStream Desktop App
+; Produces standalone Windows installer CleoStream_Setup.exe
 
-#define MyAppName "React in Meetings"
+#define MyAppName "CleoStream"
 #define MyAppVersion "1.1.0"
 #define MyAppPublisher "Delight Chukwu"
-#define MyAppURL "https://github.com/delightc123/React-in-Meetings"
-#define MyAppExeName "ReactInMeetings.exe"
+#define MyAppURL "https://github.com/delightc123/CleoStream"
+#define MyAppExeName "CleoStream.exe"
 
 [Setup]
 AppId={{9F3B2051-7890-4BA8-8291-C8A4D80491F0}
@@ -19,7 +19,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
 OutputDir=dist-installer
-OutputBaseFilename=ReactInMeetings_Setup
+OutputBaseFilename=CleoStream_Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -34,7 +34,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "dist\ReactInMeetings\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\CleoStream\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

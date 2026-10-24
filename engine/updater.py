@@ -1,5 +1,5 @@
 """
-React in Meetings — Auto-Update Subsystem
+CleoStream — Auto-Update Subsystem
 Connects to GitHub Releases API to check for new releases and download installers.
 """
 import os
@@ -40,7 +40,7 @@ def check_for_updates_sync(repo: str = GITHUB_REPO, current: str = __version__) 
     req = urllib.request.Request(
         url,
         headers={
-            "User-Agent": f"ReactInMeetings/{current} (Windows; x64)",
+            "User-Agent": f"CleoStream/{current} (Windows; x64)",
             "Accept": "application/vnd.github.v3+json",
         },
     )
@@ -115,7 +115,7 @@ class UpdateDownloadWorker(QThread):
     download_finished = Signal(str)   # local_file_path
     download_failed = Signal(str)     # error_message
 
-    def __init__(self, download_url: str, filename: str = "ReactInMeetings_Setup.exe", parent=None):
+    def __init__(self, download_url: str, filename: str = "CleoStream_Setup.exe", parent=None):
         super().__init__(parent)
         self.download_url = download_url
         self.filename = filename
@@ -135,7 +135,7 @@ class UpdateDownloadWorker(QThread):
 
             req = urllib.request.Request(
                 self.download_url,
-                headers={"User-Agent": "ReactInMeetings-Updater"},
+                headers={"User-Agent": "CleoStream-Updater"},
             )
 
             with urllib.request.urlopen(req, timeout=15) as response:

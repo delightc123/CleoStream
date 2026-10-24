@@ -39,7 +39,7 @@ jobs:
 
       - name: Compile standalone package with PyInstaller
         run: |
-          pyinstaller ReactInMeetings.spec --noconfirm
+          pyinstaller CleoStream.spec --noconfirm
 
       - name: Install Inno Setup
         run: |
@@ -54,12 +54,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: "React in Meetings ${{ github.ref_name }}"
+          name: "CleoStream ${{ github.ref_name }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            dist-installer/ReactInMeetings_Setup.exe
+            dist-installer/CleoStream_Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -91,7 +91,7 @@ jobs:
 
       - name: Compile standalone macOS App Bundle with PyInstaller
         run: |
-          pyinstaller ReactInMeetings.spec --noconfirm
+          pyinstaller CleoStream.spec --noconfirm
 
       - name: Install create-dmg
         run: |
@@ -101,25 +101,25 @@ jobs:
         run: |
           mkdir -p dist-installer
           create-dmg \
-            --volname "React in Meetings" \
+            --volname "CleoStream" \
             --window-pos 200 120 \
             --window-size 600 400 \
             --icon-size 100 \
-            --icon "ReactInMeetings.app" 175 190 \
-            --hide-extension "ReactInMeetings.app" \
+            --icon "CleoStream.app" 175 190 \
+            --hide-extension "CleoStream.app" \
             --app-drop-link 425 190 \
-            "dist-installer/ReactInMeetings_macOS.dmg" \
-            "dist/ReactInMeetings.app" || test -f dist-installer/ReactInMeetings_macOS.dmg
+            "dist-installer/CleoStream_macOS.dmg" \
+            "dist/CleoStream.app" || test -f dist-installer/CleoStream_macOS.dmg
 
       - name: Publish macOS Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: "React in Meetings ${{ github.ref_name }}"
+          name: "CleoStream ${{ github.ref_name }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            dist-installer/ReactInMeetings_macOS.dmg
+            dist-installer/CleoStream_macOS.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

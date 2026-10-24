@@ -1,5 +1,5 @@
 """
-React in Meetings — Vision & Compositing Engine Core
+CleoStream — Vision & Compositing Engine Core
 """
 from .detector import (
     Clock, Face, Hand, Body, ensure_models, preflight, build_detectors,

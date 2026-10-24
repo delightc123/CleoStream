@@ -1,5 +1,5 @@
 """
-React in Meetings — Desktop UI Package
+CleoStream — Desktop UI Package
 """
 from .styles import DARK_THEME_QSS
 from .video_widget import VideoWidget

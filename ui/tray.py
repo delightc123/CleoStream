@@ -42,7 +42,7 @@ class TrayController(QObject):
         self._notified_minimize = False
 
         self.tray_icon = QSystemTrayIcon(create_tray_icon(), parent)
-        self.tray_icon.setToolTip("React in Meetings — Meme Reaction Camera")
+        self.tray_icon.setToolTip("CleoStream — Meme Reaction Camera")
 
         # Context Menu
         self.menu = QMenu()
@@ -69,7 +69,7 @@ class TrayController(QObject):
             }
         """)
 
-        self.show_action = self.menu.addAction("Show React in Meetings")
+        self.show_action = self.menu.addAction("Show CleoStream")
         self.show_action.triggered.connect(self.show_window_requested.emit)
 
         self.menu.addSeparator()
@@ -106,7 +106,7 @@ class TrayController(QObject):
         """Displays a one-time balloon tip when minimized to tray."""
         if not self._notified_minimize and self.tray_icon.isSystemTrayAvailable():
             self.tray_icon.showMessage(
-                "React in Meetings",
+                "CleoStream",
                 "App minimized to tray. Your video stream is still active in your meeting.",
                 QSystemTrayIcon.Information,
                 3000

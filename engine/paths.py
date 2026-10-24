@@ -1,5 +1,5 @@
 """
-React in Meetings — Path & Resource Resolver
+CleoStream — Path & Resource Resolver
 Supports standard Python source trees and frozen PyInstaller bundles.
 """
 import os
@@ -17,16 +17,31 @@ def get_app_data_dir() -> str:
     """Returns writable directory for user settings and backups."""
     if getattr(sys, "frozen", False):
         if sys.platform == "win32":
-            # When installed in Program Files, write user settings to %APPDATA%\ReactInMeetings
+            # When installed in Program Files, write user settings to %APPDATA%\CleoStream
             appdata = os.environ.get("APPDATA")
             if appdata:
-                path = os.path.join(appdata, "ReactInMeetings")
+                path = os.path.join(appdata, "CleoStream")
+                # Seamless migration from legacy path if present
+                legacy_path = os.path.join(appdata, "ReactInMeetings")
+                if not os.path.exists(path) and os.path.exists(legacy_path):
+                    try:
+                        import shutil
+                        shutil.copytree(legacy_path, path)
+                    except Exception:
+                        pass
                 os.makedirs(path, exist_ok=True)
                 return path
         elif sys.platform == "darwin":
-            # On macOS, write user settings to ~/Library/Application Support/ReactInMeetings
+            # On macOS, write user settings to ~/Library/Application Support/CleoStream
             home = os.path.expanduser("~")
-            path = os.path.join(home, "Library", "Application Support", "ReactInMeetings")
+            path = os.path.join(home, "Library", "Application Support", "CleoStream")
+            legacy_path = os.path.join(home, "Library", "Application Support", "ReactInMeetings")
+            if not os.path.exists(path) and os.path.exists(legacy_path):
+                try:
+                    import shutil
+                    shutil.copytree(legacy_path, path)
+                except Exception:
+                    pass
             os.makedirs(path, exist_ok=True)
             return path
         return os.path.dirname(sys.executable)

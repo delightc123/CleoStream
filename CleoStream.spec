@@ -71,7 +71,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='ReactInMeetings',
+    name='CleoStream',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -91,22 +91,22 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='ReactInMeetings',
+    name='CleoStream',
 )
 
 if sys.platform == 'darwin':
     app = BUNDLE(
         coll,
-        name='ReactInMeetings.app',
+        name='CleoStream.app',
         icon=None,
-        bundle_identifier='com.delightc123.reactinmeetings',
+        bundle_identifier='com.delightc123.cleostream',
         info_plist={
-            'CFBundleName': 'React in Meetings',
-            'CFBundleDisplayName': 'React in Meetings',
-            'CFBundleIdentifier': 'com.delightc123.reactinmeetings',
+            'CFBundleName': 'CleoStream',
+            'CFBundleDisplayName': 'CleoStream',
+            'CFBundleIdentifier': 'com.delightc123.cleostream',
             'CFBundleVersion': '1.1.0',
             'CFBundleShortVersionString': '1.1.0',
-            'NSCameraUsageDescription': 'React in Meetings requires camera access to detect facial expressions and gesture reactions in real time.',
+            'NSCameraUsageDescription': 'CleoStream requires camera access to detect facial expressions and gesture reactions in real time.',
             'NSHighResolutionCapable': 'True',
             'LSUIElement': '0',
             'NSPrincipalClass': 'NSApplication',

@@ -168,7 +168,7 @@ class ReactionCard(QFrame):
             )
             return
 
-        # 1. Back up existing file to %APPDATA%/ReactInMeetings/backups/
+        # 1. Back up existing file to %APPDATA%/CleoStream/backups/
         os.makedirs(USER_ASSETS_DIR, exist_ok=True)
         os.makedirs(BACKUPS_DIR, exist_ok=True)
         

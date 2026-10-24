@@ -1,5 +1,5 @@
 """
-React in Meetings — Modern Update Modal Dialog
+CleoStream — Modern Update Modal Dialog
 Displays available release notes, download progress, and triggers installer.
 """
 from PySide6.QtWidgets import (
@@ -32,7 +32,7 @@ class UpdateDialog(QDialog):
         self.download_worker = None
         self.downloaded_installer_path = None
 
-        self.setWindowTitle("Update Available — React in Meetings")
+        self.setWindowTitle("Update Available — CleoStream")
         self.setFixedSize(540, 480)
         self.setModal(True)
 
@@ -184,7 +184,7 @@ class UpdateDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _open_github(self):
-        url = self.update_info.get("html_url") or "https://github.com/delightc123/React-in-Meetings/releases"
+        url = self.update_info.get("html_url") or "https://github.com/delightc123/CleoStream/releases"
         QDesktopServices.openUrl(QUrl(url))
 
     def _on_update_clicked(self):
@@ -207,7 +207,7 @@ class UpdateDialog(QDialog):
         self.status_lbl.setVisible(True)
         self.status_lbl.setText("Connecting to download server...")
 
-        installer_name = self.update_info.get("installer_name") or "ReactInMeetings_Setup.exe"
+        installer_name = self.update_info.get("installer_name") or "CleoStream_Setup.exe"
         self.download_worker = UpdateDownloadWorker(installer_url, filename=installer_name, parent=self)
         self.download_worker.progress.connect(self._on_progress)
         self.download_worker.download_finished.connect(self._on_finished)

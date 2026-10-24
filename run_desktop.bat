@@ -1,5 +1,5 @@
 @echo off
-title React in Meetings — Desktop App
+title CleoStream — Desktop App
 cd /d "%~dp0"
 
 if not exist "venv\Scripts\python.exe" (
@@ -9,5 +9,5 @@ if not exist "venv\Scripts\python.exe" (
     exit /b 1
 )
 
-echo Starting React in Meetings Desktop App...
+echo Starting CleoStream Desktop App...
 start "" "venv\Scripts\python.exe" app.py %*

@@ -21,7 +21,7 @@ from engine.version import __version__
 
 class MainWindow(QMainWindow):
     """
-    Main Application Window for React in Meetings Desktop.
+    Main Application Window for CleoStream Desktop.
     """
     def __init__(self, worker, parent=None):
         super().__init__(parent)
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self._is_quitting = False
         self._update_worker = None
 
-        self.setWindowTitle(f"React in Meetings v{__version__} — Meme Reaction Camera")
+        self.setWindowTitle(f"CleoStream v{__version__} — Meme Reaction Camera")
         self.setWindowIcon(create_tray_icon())
         self.resize(1180, 720)
         self.setMinimumSize(900, 560)
@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         h_layout.setSpacing(14)
 
         # App Logo & Title
-        logo_label = QLabel("⚡ React in Meetings")
+        logo_label = QLabel("⚡ CleoStream")
         logo_label.setObjectName("AppTitle")
         h_layout.addWidget(logo_label)
 
@@ -296,7 +296,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(
                     self,
                     "Up to Date",
-                    f"You are running the latest version of React in Meetings (v{__version__}).\nNo new updates available."
+                    f"You are running the latest version of CleoStream (v{__version__}).\nNo new updates available."
                 )
 
     # -------------------------------------------------------------------------

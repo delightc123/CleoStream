@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-React in Meetings — Modern Desktop Application
+CleoStream — Modern Desktop Application
 PySide6 (Qt6) Entrypoint with real-time MediaPipe vision worker,
 OBS virtual camera streaming, drag-and-drop meme gallery, and system tray.
 """
@@ -22,7 +22,7 @@ from ui import MainWindow, DARK_THEME_QSS, create_tray_icon
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="React in Meetings — Desktop Application")
+    parser = argparse.ArgumentParser(description="CleoStream — Desktop Application")
     parser.add_argument("--camera", type=int, default=0, help="Camera index (default: 0)")
     parser.add_argument("--no-vcam", action="store_true", help="Disable virtual camera broadcast")
     parser.add_argument("--size", default="1280x720", help="Resolution: 1280x720 or 640x480")
@@ -38,9 +38,9 @@ def main():
         )
 
     app = QApplication(sys.argv)
-    app.setApplicationName("React in Meetings")
-    app.setApplicationDisplayName("React in Meetings")
-    app.setOrganizationName("ReactInMeetings")
+    app.setApplicationName("CleoStream")
+    app.setApplicationDisplayName("CleoStream")
+    app.setOrganizationName("CleoStream")
     app.setWindowIcon(create_tray_icon())
     app.setStyleSheet(DARK_THEME_QSS)
 

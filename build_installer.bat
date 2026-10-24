@@ -1,11 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
-title React in Meetings — Build Installer
+title CleoStream — Build Installer
 
 cd /d "%~dp0"
 
 echo ========================================================
-echo   React in Meetings — Standalone Build System
+echo   CleoStream — Standalone Build System
 echo ========================================================
 echo.
 
@@ -16,7 +16,7 @@ if not exist "venv\Scripts\pyinstaller.exe" (
 )
 
 echo [1/2] Compiling standalone package with PyInstaller...
-"venv\Scripts\pyinstaller.exe" ReactInMeetings.spec --noconfirm
+"venv\Scripts\pyinstaller.exe" CleoStream.spec --noconfirm
 if errorlevel 1 (
     echo [ERROR] PyInstaller build failed.
     pause
@@ -24,7 +24,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [OK] PyInstaller build succeeded: dist\ReactInMeetings\
+echo [OK] PyInstaller build succeeded: dist\CleoStream\
 echo.
 
 echo [2/2] Checking for Inno Setup compiler (ISCC.exe)...
@@ -45,13 +45,13 @@ if defined ISCC (
     echo.
     echo ========================================================
     echo   BUILD SUCCESSFUL!
-    echo   Installer: dist-installer\ReactInMeetings_Setup.exe
+    echo   Installer: dist-installer\CleoStream_Setup.exe
     echo ========================================================
 ) else (
     echo [NOTE] Inno Setup 6 is not installed on this local machine.
-    echo Standalone binaries are ready in: dist\ReactInMeetings\
+    echo Standalone binaries are ready in: dist\CleoStream\
     echo.
-    echo To build the single ReactInMeetings_Setup.exe installer:
+    echo To build the single CleoStream_Setup.exe installer:
     echo 1. Download Inno Setup 6: https://jrsoftware.org/isdl.php
     echo    -OR-
     echo 2. Push a git tag (e.g. v1.0.0) to GitHub, and GitHub Actions

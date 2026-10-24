@@ -1,16 +1,16 @@
-# React in Meetings
+# CleoStream
 
-[![Latest Release](https://img.shields.io/github/v/release/delightc123/React-in-Meetings?label=Download%20Installer&style=for-the-badge&color=6366f1)](https://github.com/delightc123/React-in-Meetings/releases/latest)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/delightc123/React-in-Meetings/blob/main/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/delightc123/CleoStream?label=Download%20Installer&style=for-the-badge&color=6366f1)](https://github.com/delightc123/CleoStream/releases/latest)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue?style=for-the-badge)](https://github.com/delightc123/CleoStream/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/delightc123/CleoStream/blob/main/LICENSE)
 
 Pull a face at your webcam. It works out *which* face, and drops the matching meme over your head, scaled to follow you around the frame. You can extend and add more memes to your heart's desire.
 
 Point Zoom, Google Meet, Microsoft Teams, or Discord at its virtual camera and the whole call sees it.
 
 > 📥 **Downloads**:
-> - 🪟 **[Download for Windows (ReactInMeetings_Setup.exe)](https://github.com/delightc123/React-in-Meetings/releases/latest)** *(Windows 10/11 Setup Wizard)*
-> - 🍏 **[Download for macOS (ReactInMeetings_macOS.dmg)](https://github.com/delightc123/React-in-Meetings/releases/latest)** *(Apple Silicon M1/M2/M3/M4)*  
+> - 🪟 **[Download for Windows (CleoStream_Setup.exe)](https://github.com/delightc123/CleoStream/releases/latest)** *(Windows 10/11 Setup Wizard)*
+> - 🍏 **[Download for macOS (CleoStream_macOS.dmg)](https://github.com/delightc123/CleoStream/releases/latest)** *(Apple Silicon M1/M2/M3/M4)*  
 > *(No Python or command-line required. Built-in auto-updates on both platforms)*
 
 ---
@@ -36,13 +36,13 @@ python app.py
 
 ### macOS (MacBook) Installation & Gatekeeper Note
 
-Because React in Meetings is an independent open-source project without an annual Apple Developer certificate:
-1. Open the downloaded `ReactInMeetings_macOS.dmg` and drag **React in Meetings** into `/Applications`.
+Because CleoStream is an independent open-source project without an annual Apple Developer certificate:
+1. Open the downloaded `CleoStream_macOS.dmg` and drag **CleoStream** into `/Applications`.
 2. When launching for the first time, if macOS displays *"cannot be opened because Apple cannot check it for malicious software"*:
-   - **Right-click** (or Control-click) `ReactInMeetings.app` in `/Applications` → click **Open** → click **Open**, OR
+   - **Right-click** (or Control-click) `CleoStream.app` in `/Applications` → click **Open** → click **Open**, OR
    - Run this one-line command in Terminal:
      ```bash
-     xattr -cr /Applications/ReactInMeetings.app
+     xattr -cr /Applications/CleoStream.app
      ```
 3. **Virtual Camera on Mac**: To stream composited meme reactions to Zoom, Google Meet, or Microsoft Teams, ensure [OBS Studio](https://obsproject.com/) (free) is installed to provide the macOS CoreMediaIO virtual camera plugin. (Preview mode works without OBS).
 
@@ -53,10 +53,10 @@ Because React in Meetings is an independent open-source project without an annua
 For headless setups, terminal lovers, or quick testing without the full GUI:
 
 ```bash
-python react_in_meetings_v2.py              # Calibrated engine (preview + virtual camera)
-python react_in_meetings_v2.py --no-vcam    # Local preview only
-python react_in_meetings_v2.py --calibrate  # 7-second terminal calibration
-python react_in_meetings.py                 # Fixed-threshold fallback engine
+python cleostream.py              # Calibrated engine (preview + virtual camera)
+python cleostream.py --no-vcam    # Local preview only
+python cleostream.py --calibrate  # 7-second terminal calibration
+python cleostream_fallback.py     # Fixed-threshold fallback engine
 ```
 
 Fourteen reactions out of the box: **time out**, **heart hands**, **hands over face**, **crashing out**, **dancing**, **nose pinch**, **flirty**, **hand up**, **tongue out**, **gasp**, **disgust**, **talking to the wall**, **side-eye**, and **spinning**.
@@ -108,7 +108,7 @@ Virtual camera: 'OBS Virtual Camera'  <- select this camera in Zoom / Meet
 - **Google Meet / Teams / Discord**: Look under video device settings.
 
 > [!IMPORTANT]
-> **Start React in Meetings before launching your meeting app.** Most meeting clients scan for connected cameras once on launch and won't detect virtual devices registered afterwards.
+> **Start CleoStream before launching your meeting app.** Most meeting clients scan for connected cameras once on launch and won't detect virtual devices registered afterwards.
 
 ---
 
@@ -146,7 +146,7 @@ Reaction media lives in `assets/`, named after the corresponding pose (e.g. `hea
 
 1. **Place Asset**: Save your image/GIF in `assets/` (e.g., `assets/thinking.png`).
 2. **Register Pose**: Append the identifier to `POSES` in `engine/decision.py`. The list evaluates top-to-bottom, so place specific poses above generic ones.
-3. **Add Detection Logic**: Insert a branch in `decide()` inside [`engine/decision.py`](file:///C:/Software/PROJ/React-in-Meetings/engine/decision.py):
+3. **Add Detection Logic**: Insert a branch in `decide()` inside [`engine/decision.py`](file:///C:/Software/PROJ/CleoStream/engine/decision.py):
    ```python
    for h in hands:
        if near(h.palm, face.chin, 0.5) and not h.open:
@@ -199,11 +199,11 @@ $$z = \frac{\text{reading} - \mu_{\text{neutral}}}{\sigma_{\text{neutral}}}$$
 ## Project Structure
 
 ```text
-React-in-Meetings/
+CleoStream/
 ├── app.py                      # Desktop application entrypoint (PySide6)
 ├── run_desktop.bat             # One-click Windows batch launcher
-├── react_in_meetings_v2.py     # Calibrated CLI script entrypoint
-├── react_in_meetings.py        # Fixed-threshold fallback CLI script
+├── cleostream.py               # Calibrated CLI script entrypoint
+├── cleostream_fallback.py      # Fixed-threshold fallback CLI script
 ├── calibration.json            # Personalized neutral baseline
 ├── requirements.txt            # Pinned dependencies (MediaPipe, OpenCV, PySide6)
 ├── assets/                     # Reaction media library (images & animated GIFs)
@@ -243,4 +243,4 @@ React-in-Meetings/
 ## Author & Maintainer
 
 **Delight Chukwu**  
-*React in Meetings Engine*
+*CleoStream Engine*

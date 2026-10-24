@@ -33,7 +33,7 @@ def test_update_dialog_instantiation():
         "current_version": "1.0.0",
         "remote_version": "v1.0.1",
         "notes": "### New Features\n- Added cool meme reactions\n- Faster startup",
-        "html_url": "https://github.com/delightc123/React-in-Meetings/releases/tag/v1.0.1",
+        "html_url": "https://github.com/delightc123/CleoStream/releases/tag/v1.0.1",
         "installer_url": "",
     }
     dialog = UpdateDialog(dummy_info)
