@@ -124,6 +124,7 @@ class Face:
 class Hand:
     def __init__(self, lms, W, H):
         p = np.array([[l.x * W, l.y * H] for l in lms], np.float32)
+        self.pts = p
         self.palm = p[[0, 5, 9, 13, 17]].mean(0)
         self.thumb, self.index, self.middle = p[4], p[8], p[12]
         d = p[9] - p[0]
