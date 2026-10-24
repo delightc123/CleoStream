@@ -16,7 +16,7 @@ if not exist "venv\Scripts\pyinstaller.exe" (
 )
 
 echo [1/2] Compiling standalone package with PyInstaller...
-"venv\Scripts\pyinstaller.exe" CleoStream.spec --noconfirm
+"venv\Scripts\python.exe" -m PyInstaller CleoStream.spec --noconfirm
 if errorlevel 1 (
     echo [ERROR] PyInstaller build failed.
     pause
