@@ -43,6 +43,7 @@ class VisionWorker(QThread):
     calibration_progress = Signal(float, int, bool)   # (progress 0.0-1.0, samples, face_seen)
     calibration_finished = Signal(object, list)       # (baseline, warnings)
     assets_reloaded = Signal(list)
+    hand_tracking_updated = Signal(list, object)       # (hands, face)
 
     def __init__(self, camera_index=0, resolution=(1280, 720), flip=True, enable_vcam=True, parent=None):
         super().__init__(parent)
@@ -192,6 +193,7 @@ class VisionWorker(QThread):
                     if fr.face_landmarks else None
                 hands = [Hand(h, W, H) for h in hr.hand_landmarks]
                 body = Body(pr.pose_landmarks[0], W, H) if pr.pose_landmarks else None
+                self.hand_tracking_updated.emit(hands, face)
 
                 m = measure(face, self.baseline) if face is not None else {}
                 tongue = tongue_score(frame, face, hands, over("tongue_jaw", m, "z_jaw", "jaw")) if face is not None else 0.0

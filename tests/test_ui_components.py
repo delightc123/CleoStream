@@ -10,7 +10,7 @@ if ROOT_DIR not in sys.path:
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QImage
-from ui import VideoWidget, AssetGridWidget, CalibrationDialog, TrayController, DARK_THEME_QSS
+from ui import VideoWidget, AssetGridWidget, CalibrationDialog, GestureRecorderDialog, TrayController, DARK_THEME_QSS
 from engine.decision import POSES
 
 def test_ui_components():
@@ -57,6 +57,12 @@ def test_ui_components():
     assert tray.tray_icon is not None
     assert len(tray.menu.actions()) >= 4
     print("[OK] TrayController verified")
+
+    # 5. Test GestureRecorderDialog
+    recorder = GestureRecorderDialog(gesture_name="Test Gesture")
+    assert recorder.state == "IDLE"
+    assert recorder.save_btn.isEnabled() is False
+    print("[OK] GestureRecorderDialog verified")
 
     print("\nAll Phase 3 UI Component unit tests PASSED successfully!")
 
