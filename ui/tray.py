@@ -113,6 +113,17 @@ class TrayController(QObject):
             )
             self._notified_minimize = True
 
+    def notify_mute_state(self, paused: bool):
+        """Displays a notification balloon when pause state is toggled while minimized."""
+        if self.tray_icon.isSystemTrayAvailable():
+            title = "Reactions Paused" if paused else "Reactions Resumed"
+            msg = (
+                "Reactions muted. Clean webcam feed is broadcasting to your meeting."
+                if paused
+                else "Reactions active and ready to trigger."
+            )
+            self.tray_icon.showMessage(title, msg, QSystemTrayIcon.Information, 2000)
+
     @Slot(bool, str)
     def update_vcam_status(self, active: bool, device_name: str):
         self.vcam_action.setChecked(active)

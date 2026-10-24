@@ -20,6 +20,7 @@ class VideoWidget(QWidget):
         self._current_frame = None
         self._fps = 0.0
         self._active_reaction = None
+        self._paused = False
         self._status_text = "Initializing Camera..."
 
     @Slot(QImage)
@@ -33,9 +34,10 @@ class VideoWidget(QWidget):
         """Receives metrics update from VisionWorker."""
         self._fps = float(telemetry.get("fps", 0.0))
         self._active_reaction = telemetry.get("reaction") or telemetry.get("shown")
+        self._paused = bool(telemetry.get("paused", False))
         if not telemetry.get("face_detected"):
             self._status_text = "Searching for face..."
-        elif telemetry.get("paused"):
+        elif self._paused:
             self._status_text = "Reactions Paused"
         else:
             self._status_text = "Active"
@@ -51,6 +53,12 @@ class VideoWidget(QWidget):
     def set_active_reaction(self, reaction: str):
         """Sets the active reaction banner and triggers repaint."""
         self._active_reaction = reaction if reaction else None
+        self.update()
+
+    @Slot(bool)
+    def set_paused(self, paused: bool):
+        """Sets paused state and triggers repaint."""
+        self._paused = bool(paused)
         self.update()
 
     def paintEvent(self, event):
@@ -86,8 +94,18 @@ class VideoWidget(QWidget):
             painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
             painter.drawText(target_x + 22, target_y + 30, f"{self._fps:0.1f} FPS")
 
-            # Draw upper-right active reaction indicator if firing
-            if self._active_reaction:
+            # Draw upper-right status pill (Muted vs Active Reaction)
+            if self._paused:
+                label_text = "⏸ REACTIONS MUTED (CLEAN CAM)"
+                pill_w = len(label_text) * 7 + 22
+                react_rect = QRect(target_x + target_w - pill_w - 12, target_y + 12, pill_w, 28)
+                painter.setBrush(QColor(180, 83, 9, 235))
+                painter.setPen(QColor(245, 158, 11))
+                painter.drawRoundedRect(react_rect, 6, 6)
+                painter.setPen(QColor(255, 255, 255))
+                painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
+                painter.drawText(react_rect, Qt.AlignCenter, label_text)
+            elif self._active_reaction:
                 label_text = f"🔥 {self._active_reaction.upper()}"
                 pill_w = len(label_text) * 9 + 20
                 react_rect = QRect(target_x + target_w - pill_w - 12, target_y + 12, pill_w, 28)
@@ -95,6 +113,7 @@ class VideoWidget(QWidget):
                 painter.setPen(QColor(129, 140, 248))
                 painter.drawRoundedRect(react_rect, 6, 6)
                 painter.setPen(QColor(255, 255, 255))
+                painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
                 painter.drawText(react_rect, Qt.AlignCenter, label_text)
         else:
             # Standby screen when camera is idle/initializing

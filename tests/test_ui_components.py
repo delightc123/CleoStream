@@ -33,7 +33,11 @@ def test_ui_components():
     assert video._active_reaction == "cheer"
     video.set_active_reaction(None)
     assert video._active_reaction is None
-    print("[OK] VideoWidget verified (telemetry + direct setters)")
+    video.set_paused(True)
+    assert video._paused is True
+    video.set_paused(False)
+    assert video._paused is False
+    print("[OK] VideoWidget verified (telemetry + direct setters + paused state)")
 
     # 2. Test AssetGridWidget
     grid = AssetGridWidget()

@@ -130,6 +130,19 @@ QPushButton#PrimaryBtn:pressed {
     background-color: #3730a3;
 }
 
+/* Active Pause/Mute Button State */
+QPushButton#PauseBtnActive {
+    background-color: #b45309;
+    border: 1px solid #f59e0b;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+QPushButton#PauseBtnActive:hover {
+    background-color: #d97706;
+    border-color: #fbbf24;
+}
+
 /* Test Action Button inside cards */
 QPushButton#TestBtn {
     background-color: #242432;

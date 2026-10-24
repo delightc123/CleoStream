@@ -4,10 +4,11 @@ reaction gallery, controls toolbar, non-blocking notification banners,
 system tray lifecycle, and GitHub auto-updates.
 """
 from PySide6.QtCore import Qt, QSize, Slot, QTimer
-from PySide6.QtGui import QIcon, QCloseEvent
+from PySide6.QtGui import QIcon, QCloseEvent, QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QComboBox, QFrame, QSplitter, QMessageBox
+    QPushButton, QComboBox, QFrame, QSplitter, QMessageBox,
+    QApplication, QLineEdit, QTextEdit
 )
 
 from .video_widget import VideoWidget
@@ -37,6 +38,9 @@ class MainWindow(QMainWindow):
         # Initialize System Tray Controller
         self.tray = TrayController(self)
         self._bind_tray_signals()
+
+        # Bind Global Keyboard Shortcuts (Ctrl+Shift+M, Space)
+        self._setup_shortcuts()
 
         # Build UI layout
         central_widget = QWidget()
@@ -184,7 +188,9 @@ class MainWindow(QMainWindow):
         self.hud_btn.clicked.connect(self._on_hud_toggled)
         toolbar.addWidget(self.hud_btn)
 
-        self.pause_btn = QPushButton("Pause Reactions")
+        self.pause_btn = QPushButton("⏸ Pause Reactions (Space)")
+        self.pause_btn.setObjectName("PauseBtn")
+        self.pause_btn.setToolTip("Mute/unmute meme reactions during calls (Shortcut: Space or Ctrl+Shift+M)")
         self.pause_btn.setCheckable(True)
         self.pause_btn.setChecked(False)
         self.pause_btn.clicked.connect(self._on_pause_toggled)
@@ -323,6 +329,23 @@ class MainWindow(QMainWindow):
         flip = self.mirror_btn.isChecked()
         self.worker.set_flip(flip)
 
+    def _setup_shortcuts(self):
+        """Binds global window shortcuts for instant reaction muting during calls."""
+        self.mute_shortcut = QShortcut(QKeySequence("Ctrl+Shift+M"), self)
+        self.mute_shortcut.activated.connect(self._toggle_pause_shortcut)
+
+        self.space_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
+        self.space_shortcut.activated.connect(self._toggle_pause_shortcut)
+
+    @Slot()
+    def _toggle_pause_shortcut(self):
+        """Toggles pause/mute state via keyboard shortcut unless a text field is focused."""
+        focused = QApplication.focusWidget()
+        if isinstance(focused, (QLineEdit, QTextEdit)):
+            return
+        self.pause_btn.setChecked(not self.pause_btn.isChecked())
+        self._on_pause_toggled()
+
     @Slot()
     def _on_hud_toggled(self):
         hud = self.hud_btn.isChecked()
@@ -333,6 +356,22 @@ class MainWindow(QMainWindow):
         paused = self.pause_btn.isChecked()
         self.worker.set_paused(paused)
         self.tray.pause_action.setChecked(paused)
+        self.video_widget.set_paused(paused)
+
+        # Update button text, icon, and dynamic style
+        if paused:
+            self.pause_btn.setText("▶ Resume Reactions (Space)")
+            self.pause_btn.setObjectName("PauseBtnActive")
+        else:
+            self.pause_btn.setText("⏸ Pause Reactions (Space)")
+            self.pause_btn.setObjectName("PauseBtn")
+
+        self.pause_btn.style().unpolish(self.pause_btn)
+        self.pause_btn.style().polish(self.pause_btn)
+
+        # If window is minimized or hidden, show tray toast notification
+        if not self.isVisible() or self.isMinimized():
+            self.tray.notify_mute_state(paused)
 
     @Slot(str)
     def _on_test_reaction_requested(self, pose: str):
@@ -389,7 +428,7 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def _on_tray_pause_toggled(self, paused: bool):
         self.pause_btn.setChecked(paused)
-        self.worker.set_paused(paused)
+        self._on_pause_toggled()
 
     @Slot()
     def _open_calibration_modal(self):

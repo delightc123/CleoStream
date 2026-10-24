@@ -28,6 +28,22 @@ def test_app_integration():
     assert len(window.asset_grid.cards) == 14, "All 14 reaction cards must be in grid"
     assert window.vcam_badge is not None, "Virtual Camera status badge must exist"
     assert window.cam_combo.count() >= 3, "Camera selector must list at least 3 cameras"
+    assert window.mute_shortcut is not None, "Ctrl+Shift+M shortcut must be registered"
+    assert window.space_shortcut is not None, "Space shortcut must be registered"
+
+    # Validate quick-mute keyboard shortcut toggle
+    assert window.pause_btn.isChecked() is False
+    assert "Pause Reactions" in window.pause_btn.text()
+    window._toggle_pause_shortcut()
+    assert window.pause_btn.isChecked() is True
+    assert "Resume Reactions" in window.pause_btn.text()
+    assert window.video_widget._paused is True
+
+    window._toggle_pause_shortcut()
+    assert window.pause_btn.isChecked() is False
+    assert "Pause Reactions" in window.pause_btn.text()
+    assert window.video_widget._paused is False
+    print("[OK] Quick Mute shortcuts and state toggling verified")
     print("[OK] MainWindow component validation passed")
 
     def on_timeout():
