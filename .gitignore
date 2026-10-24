@@ -10,8 +10,9 @@ memory.md
 # Local reference context
 .context/itsgiving/
 
-# User-specific calibration baseline
+# User-specific calibration baseline & custom gesture registry
 calibration.json
+custom_gestures.json*
 
 # Python virtual environment & bytecode
 venv/

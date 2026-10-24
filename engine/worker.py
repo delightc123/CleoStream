@@ -26,6 +26,7 @@ from .calibration import (
     Baseline, Collector, calibration_warnings, CALIB_FILE,
     CALIB_SECONDS, CALIB_WARMUP, CALIB_MIN_SAMPLES
 )
+from .custom_gestures import CustomGestureRegistry
 
 from .paths import ROOT_DIR, APP_DATA_DIR
 
@@ -60,6 +61,7 @@ class VisionWorker(QThread):
         self._mutex = QMutex()
         self.assets = {}
         self.baseline = Baseline.load()
+        self.custom_registry = CustomGestureRegistry()
         self.vcam = None
         self.cap = None
 
@@ -87,7 +89,7 @@ class VisionWorker(QThread):
             self._init_vcam()
 
         shown, hold = None, 0
-        arm = {p: 0 for p in POSES}
+        arm = {p: 0 for p in self.custom_registry.get_all_ids()}
         shown_since = 0.0
         sm_center = np.array([self.resolution[0] / 2, self.resolution[1] / 2], np.float32)
         sm_h = float(self.resolution[1] * 0.45)
@@ -194,13 +196,16 @@ class VisionWorker(QThread):
                 m = measure(face, self.baseline) if face is not None else {}
                 tongue = tongue_score(frame, face, hands, over("tongue_jaw", m, "z_jaw", "jaw")) if face is not None else 0.0
                 gesture = motion.update(hands, face)
-                raw, dbg = decide(face, hands, body, tongue, gesture, m)
+                raw, dbg = decide(face, hands, body, tongue, gesture, m, custom_registry=self.custom_registry)
 
                 fired = None
                 if not paused:
-                    for p in POSES:
+                    all_ids = self.custom_registry.get_all_ids()
+                    for p in all_ids:
+                        if p not in arm:
+                            arm[p] = 0
                         arm[p] = arm[p] + 1 if raw == p else 0
-                        if raw == p and arm[p] >= ARM.get(p, 3):
+                        if raw == p and arm[p] >= self.custom_registry.get_arm_frames(p):
                             fired = p
                     now = time.monotonic()
                     if forced_pose and now < forced_until:
@@ -208,7 +213,7 @@ class VisionWorker(QThread):
                     if fired:
                         if fired != shown:
                             shown_since = now
-                        shown, hold = fired, HOLD_FRAMES
+                        shown, hold = fired, self.custom_registry.get_hold_frames(fired)
                     elif hold > 0:
                         hold -= 1
                     else:
@@ -329,8 +334,13 @@ class VisionWorker(QThread):
 
     def _load_all_assets(self):
         with QMutexLocker(self._mutex):
-            self.assets = {pose: load_asset(pose) for pose in POSES}
-        self.assets_reloaded.emit(POSES)
+            all_ids = self.custom_registry.get_all_ids()
+            self.assets = {}
+            for p in all_ids:
+                cg = self.custom_registry.get(p)
+                asset_ref = cg.asset_file if (cg and cg.asset_file) else p
+                self.assets[p] = load_asset(asset_ref)
+        self.assets_reloaded.emit(all_ids)
 
     def _cleanup(self):
         if self.cap is not None:
@@ -365,6 +375,13 @@ class VisionWorker(QThread):
                 pass
             self.vcam = None
             self.vcam_status_changed.emit(False, "Virtual camera disabled")
+
+    @Slot()
+    def reload_gestures(self):
+        """Reloads custom gestures and refreshes loaded reaction assets."""
+        with QMutexLocker(self._mutex):
+            self.custom_registry.load()
+        self._load_all_assets()
 
     @Slot(int)
     def set_camera_index(self, index: int):

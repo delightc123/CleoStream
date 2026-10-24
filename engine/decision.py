@@ -82,7 +82,7 @@ def over(key, m, zkey, rawkey):
     return m[zkey] >= Z[key] and m[rawkey] >= FLOOR[key]
 
 
-def decide(face, hands, body, tongue, gesture, m):
+def decide(face, hands, body, tongue, gesture, m, custom_registry=None):
     """Return (pose or None, debug dict)."""
     d = {"hands": len(hands)}
     if face is None:
@@ -94,6 +94,27 @@ def decide(face, hands, body, tongue, gesture, m):
     elbows_up = bool(body and body.elbows_up)
     d.update(m, gesture=gesture, tongue=tongue, elbows_up=elbows_up)
     screaming = over("scream_jaw", m, "z_jaw", "jaw")
+
+    # Priority 1: User-calibrated dynamic gestures evaluated first
+    if custom_registry is not None and hands:
+        try:
+            calibrated = custom_registry.get_calibrated(enabled_only=True)
+            if calibrated:
+                from .gesture_matcher import extract_hand_signature, is_gesture_matched
+                for cg in calibrated:
+                    target_sig = cg.to_signature()
+                    if not target_sig:
+                        continue
+                    for h in hands:
+                        if hasattr(h, "pts") and h.pts is not None:
+                            live_sig = extract_hand_signature(h.pts, face=face)
+                            matched, score = is_gesture_matched(live_sig, target_sig, tolerance=cg.tolerance)
+                            if matched:
+                                d["custom_match"] = cg.id
+                                d["custom_score"] = round(score, 4)
+                                return cg.id, d
+        except Exception as e:
+            d["custom_error"] = str(e)
 
     if len(hands) >= 2:
         a, b = hands[0], hands[1]

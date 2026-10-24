@@ -282,13 +282,18 @@ def compute_gesture_similarity(live: HandSignature, target: HandSignature) -> fl
     return float(round(confidence, 4))
 
 
-def is_gesture_matched(live: HandSignature, target: HandSignature) -> Tuple[bool, float]:
+def is_gesture_matched(
+    live: HandSignature,
+    target: HandSignature,
+    tolerance: Optional[float] = None
+) -> Tuple[bool, float]:
     """
     Evaluates whether live hand signature matches target signature above tolerance.
     Returns (is_match: bool, confidence: float).
     """
     confidence = compute_gesture_similarity(live, target)
-    matched = confidence >= target.tolerance
+    threshold = tolerance if tolerance is not None else target.tolerance
+    matched = confidence >= threshold
     return matched, confidence
 
 

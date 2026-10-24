@@ -69,6 +69,10 @@ def find_asset_file(pose, assets_dir=None):
     If assets_dir is not explicitly specified, checks the user customizations
     directory (APP_DATA_DIR/assets) first, falling back to factory assets (ROOT_DIR/assets).
     """
+    # Direct absolute or relative file existence check
+    if isinstance(pose, str) and os.path.isfile(pose):
+        return os.path.abspath(pose)
+
     candidate_dirs = []
     if assets_dir:
         candidate_dirs.append(assets_dir)
@@ -83,6 +87,11 @@ def find_asset_file(pose, assets_dir=None):
     for adir in candidate_dirs:
         if not os.path.isdir(adir):
             continue
+        # Check if pose matches an exact filename in candidate directory
+        if isinstance(pose, str):
+            direct_path = os.path.join(adir, pose)
+            if os.path.isfile(direct_path):
+                return direct_path
         try:
             for fn in sorted(os.listdir(adir)):
                 stem, ext = os.path.splitext(fn)

@@ -23,6 +23,9 @@ from .gesture_matcher import (
     aggregate_signatures, ANCHOR_FREE, ANCHOR_NEAR_HEAD, ANCHOR_OVER_MOUTH,
     ANCHOR_UNDER_CHIN, ANCHOR_PINCHING_NOSE, FINGER_EXTENDED, FINGER_CURLED, FINGER_HALF
 )
+from .custom_gestures import (
+    CustomGesture, CustomGestureRegistry, DEFAULT_BUILTIN_GESTURES
+)
 from .worker import VisionWorker
 
 __all__ = [
@@ -38,5 +41,6 @@ __all__ = [
     "is_gesture_matched", "classify_finger_states", "classify_anchor",
     "aggregate_signatures", "ANCHOR_FREE", "ANCHOR_NEAR_HEAD", "ANCHOR_OVER_MOUTH",
     "ANCHOR_UNDER_CHIN", "ANCHOR_PINCHING_NOSE", "FINGER_EXTENDED", "FINGER_CURLED", "FINGER_HALF",
+    "CustomGesture", "CustomGestureRegistry", "DEFAULT_BUILTIN_GESTURES",
     "VisionWorker",
 ]
