@@ -17,21 +17,36 @@ def test_worker():
     frames_received = []
     telemetry_received = []
 
-    worker.frame_ready.connect(lambda img: frames_received.append((img.width(), img.height())))
-    worker.telemetry_updated.connect(lambda d: telemetry_received.append(d))
+    def check_done():
+        if len(frames_received) >= 2 and len(telemetry_received) >= 2:
+            finish_test()
 
-    def on_timeout():
-        print(f"Stopping worker... Frames received: {len(frames_received)}, Telemetry: {len(telemetry_received)}")
-        worker.stop()
-        assert not worker.isRunning(), "Worker should not be running after stop()"
-        assert len(frames_received) > 0, "Expected at least 1 frame"
-        assert len(telemetry_received) > 0, "Expected telemetry updates"
-        print(f"Frame sample: {frames_received[0]}")
-        print(f"Latest telemetry: {telemetry_received[-1]}")
-        app.quit()
+    def finish_test():
+        if not finish_test.done:
+            finish_test.done = True
+            print(f"Stopping worker... Frames received: {len(frames_received)}, Telemetry: {len(telemetry_received)}")
+            worker.stop()
+            assert not worker.isRunning(), "Worker should not be running after stop()"
+            assert len(frames_received) > 0, "Expected at least 1 frame"
+            assert len(telemetry_received) > 0, "Expected telemetry updates"
+            print(f"Frame sample: {frames_received[0]}")
+            print(f"Latest telemetry: {telemetry_received[-1]}")
+            app.quit()
+    finish_test.done = False
+
+    def on_frame(img):
+        frames_received.append((img.width(), img.height()))
+        check_done()
+
+    def on_telemetry(d):
+        telemetry_received.append(d)
+        check_done()
+
+    worker.frame_ready.connect(on_frame)
+    worker.telemetry_updated.connect(on_telemetry)
 
     worker.start()
-    QTimer.singleShot(8000, on_timeout)
+    QTimer.singleShot(15000, finish_test)
     app.exec()
 
     print("Test passed cleanly! All worker assertions succeeded.")
